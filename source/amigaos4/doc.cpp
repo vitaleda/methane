@@ -36,16 +36,18 @@ static char TheScreen[SCR_WIDTH * SCR_HEIGHT];
 
 static SDL_bool fullscreen = SDL_TRUE;
 static SDL_bool vsync = SDL_TRUE;
+static SDL_bool sleep = SDL_FALSE;
+
 static const char* renderer_name = "compositing";
 
 static char HighScoreFileName[] = "Methane.HiScores";
 #define HighScoreLoadBufferSize (MAX_HISCORES * 64)
 
-void readArgs(int argc, char** argv)
+void read_args(int argc, char** argv)
 {
     int i = 1;
     while (i < argc) {
-        printf("arg %d - %s\n", i, argv[i]);
+        //printf("arg %d - %s\n", i, argv[i]);
 
         if (!strcmp(argv[i], "nosync")) {
             vsync = SDL_FALSE;
@@ -55,42 +57,46 @@ void readArgs(int argc, char** argv)
             fullscreen = SDL_FALSE;
         }
 
+        if (!strcmp(argv[i], "sleep")) {
+            sleep = SDL_TRUE;
+        }
+
         i++;
     }
 }
 
 int main(int argc, char** argv)
 {
-	if (SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO) < 0) {
-		fprintf (stderr, "Can't init SDL : %s", SDL_GetError());
-		return 1;
-	}
+    if (SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO) < 0) {
+    	fprintf (stderr, "Can't init SDL : %s", SDL_GetError());
+    	return 1;
+    }
 
-    readArgs(argc, argv);
+    read_args(argc, argv);
 
-	SDL_JoystickOpen(0);
+    SDL_JoystickOpen(0);
 
-	main_code();
+    main_code();
 
     SDL_Quit();
 
-	return (0);
+    return (0);
 }
 
 static void print_info()
 {
-	puts("The GNU General Public License V2 applies to this game.\n");
-	puts("See: http://methane.sourceforge.net");
-	puts("Instructions:\n");
-	puts("Press X to start game (You can't enter player names).");
-	puts("Press A to fire gas from the gun.");
-	puts("Press X to jump.");
-	puts("Hold A to suck a trapped baddie into the gun.");
-	puts("Release A to throw the trapped baddie from the gun.");
-	puts("Throw baddies at the wall to destroy them.\n");
-	puts("START = Quit (and save high scores)");
-	puts("SELECT = Change player graphic during game");
-	//puts("F1 = Next Level (DISABLED)\n");
+    puts("The GNU General Public License V2 applies to this game.\n");
+    puts("See: http://methane.sourceforge.net");
+    puts("Instructions:\n");
+    puts("Press SPACE to start game (You can't enter player names).");
+    puts("Press CTRL to fire gas from the gun.");
+    puts("Press SPACE to jump.");
+    puts("Hold CTRL to suck a trapped baddie into the gun.");
+    puts("Release A to throw the trapped baddie from the gun.");
+    puts("Throw baddies at the wall to destroy them.\n");
+    puts("START = Quit (and save high scores)");
+    puts("SELECT = Change player graphic during game");
+    //puts("F1 = Next Level (DISABLED)\n");
 }
 
 static SDL_bool alloc_resources()
@@ -104,11 +110,11 @@ static SDL_bool alloc_resources()
     SdlScreen = SDL_CreateRGBSurface(0, SCR_WIDTH, SCR_HEIGHT, 32,
         0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000);
 
-	if (!SdlScreen)
-	{
-		fprintf(stderr, "Couldn't create surface: %s\n", SDL_GetError());
-		goto out;
-	}
+    if (!SdlScreen)
+    {
+    	fprintf(stderr, "Couldn't create surface: %s\n", SDL_GetError());
+    	goto out;
+    }
 
     SdlWindow = SDL_CreateWindow("Super Methane Bros SDL2",
        SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
@@ -160,49 +166,51 @@ void free_resources()
 //------------------------------------------------------------------------------
 static void main_code(void)
 {
-	JOYSTICK *jptr1;
-//	JOYSTICK *jptr2;
+    JOYSTICK *jptr1;
+    //	JOYSTICK *jptr2;
 
     if (!alloc_resources()) {
         free_resources();
         return;
     }
 
-	SDL_ShowCursor(SDL_DISABLE);
+    SDL_ShowCursor(SDL_DISABLE);
 
     print_info();
 
-	Game.InitSoundDriver();
-	Game.InitGame ();
-	Game.LoadScores();
-	Game.StartGame();
-	jptr1 = &Game.m_GameTarget.m_Joy1;
-//	jptr2 = &Game.m_GameTarget.m_Joy2;
+    Game.InitSoundDriver();
+    Game.InitGame ();
+    Game.LoadScores();
+    Game.StartGame();
+    jptr1 = &Game.m_GameTarget.m_Joy1;
+    //	jptr2 = &Game.m_GameTarget.m_Joy2;
 
     SDL_bool running = SDL_TRUE;
 
-	while (running)
-	{
-		SDL_PumpEvents();
+    Uint32 lastTicks = SDL_GetTicks();
+
+    while (running)
+    {
+    	SDL_PumpEvents();
 
         const Uint8 *state = SDL_GetKeyboardState(NULL);
 
-		if (state[SDL_SCANCODE_ESCAPE]) running = SDL_FALSE;
-		
+    	if (state[SDL_SCANCODE_ESCAPE]) running = SDL_FALSE;
+        		
         if (state[SDL_SCANCODE_TAB])
-		{
-			Game.m_GameTarget.m_Game.TogglePuffBlow();
-		}
+    	{
+    		Game.m_GameTarget.m_Game.TogglePuffBlow();
+    	}
 
-//		jptr1->key = key;
-//		jptr2->key = key;
+    //		jptr1->key = key;
+    //		jptr2->key = key;
 
         jptr1->right = state[SDL_SCANCODE_RIGHT];
-		jptr1->left  = state[SDL_SCANCODE_LEFT];
-		jptr1->up    = state[SDL_SCANCODE_UP];
-		jptr1->down  = state[SDL_SCANCODE_DOWN];
-		jptr1->fire  = state[SDL_SCANCODE_LCTRL] || state[SDL_SCANCODE_RCTRL];
-		jptr1->key = 13; // Fake key press (required for high score table)
+    	jptr1->left  = state[SDL_SCANCODE_LEFT];
+    	jptr1->up    = state[SDL_SCANCODE_UP];
+    	jptr1->down  = state[SDL_SCANCODE_DOWN];
+    	jptr1->fire  = state[SDL_SCANCODE_LCTRL] || state[SDL_SCANCODE_RCTRL];
+    	jptr1->key = 13; // Fake key press (required for high score table)
 
         SDL_Event e;
         while (SDL_PollEvent(&e))
@@ -210,11 +218,24 @@ static void main_code(void)
             if (e.type == SDL_QUIT) running = SDL_FALSE;
         }
 
-		// (CHEAT MODE DISABLED) --> jptr1->next_level = 0;
-		Game.MainLoop(0);
-	}
+    	// (CHEAT MODE DISABLED) --> jptr1->next_level = 0;
+    	Game.MainLoop(0);
 
-	Game.SaveScores();
+        if (sleep)
+        {
+            Uint32 now = SDL_GetTicks();
+            Uint32 diff = 20 - (now - lastTicks);
+
+            if (diff >0 && diff <= 20)
+            {   printf("sleeping %u\n", diff);
+                SDL_Delay(diff);
+            }
+
+            lastTicks = now;
+        }
+    }
+
+    Game.SaveScores();
     free_resources();
 }
 
@@ -300,40 +321,40 @@ void CMethDoc::DrawScreen( void *screen_ptr )
     //SDL_Color colors[PALETTE_SIZE];
     Uint32 colors[PALETTE_SIZE];
 
-	// Set the game palette
-	METHANE_RGB *pptr = m_GameTarget.m_rgbPalette;
+    // Set the game palette
+    METHANE_RGB *pptr = m_GameTarget.m_rgbPalette;
 
-	for (int cnt=0; cnt < PALETTE_SIZE; cnt++, pptr++)
-	{
+    for (int cnt=0; cnt < PALETTE_SIZE; cnt++, pptr++)
+    {
         /*
-		colors[cnt].r = pptr->red;
-		colors[cnt].g = pptr->green;
-		colors[cnt].b = pptr->blue;
+    	colors[cnt].r = pptr->red;
+    	colors[cnt].g = pptr->green;
+    	colors[cnt].b = pptr->blue;
         colors[cnt].a = 255;
         */
         colors[cnt] = 255 << 24 | pptr->red << 16 | pptr->green << 8 | pptr->blue; // ARGB
-	}
+    }
 
     if (SDL_MUSTLOCK (SdlScreen))
-	{
-		SDL_LockSurface (SdlScreen);
-	}
+    {
+    	SDL_LockSurface (SdlScreen);
+    }
 
-	// Update surface
-	Uint32 * dptr = (Uint32 *) SdlScreen->pixels;
-	char * sptr = TheScreen;
+    // Update surface
+    Uint32 * dptr = (Uint32 *) SdlScreen->pixels;
+    char * sptr = TheScreen;
 
-	for (int y = 0; y < SCR_HEIGHT; y++) {
-		for (int x = 0; x < SCR_WIDTH; x++) {
-			dptr[x] = colors[(Uint8) *sptr++];
-		}
-		dptr += (SdlScreen->pitch / 4);
-	}
+    for (int y = 0; y < SCR_HEIGHT; y++) {
+    	for (int x = 0; x < SCR_WIDTH; x++) {
+    		dptr[x] = colors[(Uint8) *sptr++];
+    	}
+    	dptr += (SdlScreen->pitch / 4);
+    }
 
     if (SDL_MUSTLOCK (SdlScreen))
-	{
-		SDL_UnlockSurface (SdlScreen);
-	}
+    {
+    	SDL_UnlockSurface (SdlScreen);
+    }
 
     SDL_UpdateTexture(SdlTexture, NULL, SdlScreen->pixels, SdlScreen->pitch);
     SDL_RenderCopy(SdlRenderer, SdlTexture, NULL, NULL);
@@ -407,41 +428,41 @@ void CMethDoc::UpdateModule(int id)
 //------------------------------------------------------------------------------
 void CMethDoc::LoadScores(void)
 {
-	FILE *fptr = fopen(HighScoreFileName, "r");
-	if (!fptr) return;	// No scores available
+    FILE *fptr = fopen(HighScoreFileName, "r");
+    if (!fptr) return;	// No scores available
 
-	// Allocate file memory, which is cleared to zero
-	char *mptr = (char *) calloc(1, HighScoreLoadBufferSize);
-	if (!mptr)		// No memory
-	{
-		fclose(fptr);
-		return;
-	}
-	
+    // Allocate file memory, which is cleared to zero
+    char *mptr = (char *) calloc(1, HighScoreLoadBufferSize);
+    if (!mptr)		// No memory
+    {
+    	fclose(fptr);
+    	return;
+    }
+        	
     fread(mptr, 1, HighScoreLoadBufferSize - 2, fptr);	 // Get the file
 
-	// (Note: mptr is zero terminated)
-	char *tptr = mptr;
-	
+    // (Note: mptr is zero terminated)
+    char *tptr = mptr;
+        	
     for (int cnt = 0; cnt < MAX_HISCORES; cnt++)	// For each highscore
-	{
-		if (!tptr[0]) break;
+    {
+    	if (!tptr[0]) break;
 
-		m_GameTarget.m_Game.InsertHiScore(atoi(&tptr[4]), tptr);
+    	m_GameTarget.m_Game.InsertHiScore(atoi(&tptr[4]), tptr);
 
     	char let;
 
-		do	// Find next name
-		{
-			let = *(tptr++);
-		} while (!( (let == '$') || (!let) ));
+    	do	// Find next name
+    	{
+    		let = *(tptr++);
+    	} while (!( (let == '$') || (!let) ));
 
-		if (!let) break;	// Unexpected EOF
-	}
+    	if (!let) break;	// Unexpected EOF
+    }
 
-	free(mptr);
+    free(mptr);
 
-	fclose(fptr);
+    fclose(fptr);
 }
 
 //------------------------------------------------------------------------------
@@ -449,19 +470,18 @@ void CMethDoc::LoadScores(void)
 //------------------------------------------------------------------------------
 void CMethDoc::SaveScores(void)
 {
-	FILE *fptr = fopen(HighScoreFileName, "w");
-	
+    FILE *fptr = fopen(HighScoreFileName, "w");
+        	
     if (!fptr) return;	// Cannot write scores
 
     int cnt;
-	HISCORES *hs;
-	
+    HISCORES *hs;
+        	
     for (cnt = 0, hs = m_GameTarget.m_Game.m_HiScores; cnt < MAX_HISCORES; cnt++, hs++)
-	{
-		fprintf(fptr, "%c%c%c%c%d$", hs->name[0], hs->name[1], hs->name[2], hs->name[3], hs->score);
-	}
+    {
+    	fprintf(fptr, "%c%c%c%c%d$", hs->name[0], hs->name[1], hs->name[2], hs->name[3], hs->score);
+    }
 
-	fclose(fptr);
-
+    fclose(fptr);
 }
 
