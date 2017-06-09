@@ -35,7 +35,7 @@ static int MR_Offset = 0;		// Current offset within the data
 //------------------------------------------------------------------------------
 // Module Reader: fseek()
 //------------------------------------------------------------------------------
-static BOOL MR_Seek(struct MREADER *rptr, long offset, int code)
+static int/*BOOL*/ MR_Seek(struct MREADER *rptr, long offset, int code)
 {
 	if (code==SEEK_SET)
 	{
@@ -52,7 +52,8 @@ static BOOL MR_Seek(struct MREADER *rptr, long offset, int code)
 
 	if (MR_Offset<0) MR_Offset = 0;
 
-	return true;
+	//return true;
+	return 0;
 }
 //------------------------------------------------------------------------------
 // Module Reader: ftell()
