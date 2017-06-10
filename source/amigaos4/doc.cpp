@@ -10,6 +10,17 @@
  *                                                                         *
  ***************************************************************************/
 
+/*
+
+TODO:
+- wrap SDL stuff into a class since this is C++
+- use SDL logging features instead of fprintf
+- configurable keys
+- configurable speed
+- configurable player names
+
+*/
+
 #include <stdlib.h>
 
 #include "SDL.h"
@@ -37,6 +48,7 @@ static char TheScreen[SCR_WIDTH * SCR_HEIGHT];
 static SDL_bool fullscreen = SDL_TRUE;
 static SDL_bool vsync = SDL_TRUE;
 static SDL_bool sleep = SDL_FALSE;
+static SDL_bool filter = SDL_FALSE;
 
 static const char* renderer_name = "compositing";
 
@@ -46,7 +58,24 @@ static char HighScoreFileName[] = "Methane.HiScores";
 static SDL_Joystick * joystick1;
 static SDL_Joystick * joystick2;
 
-void read_args(int argc, char** argv)
+struct KeyBinding {
+    SDL_Scancode sc;
+    char *data;
+};
+
+enum EKey {
+    EKeyUp = 0,
+    EKeyDown,
+    EKeyLeft,
+    EKeyRight,
+    EKeyFire
+};
+
+#define NUM_OF_ACTIONS 6
+
+static KeyBinding keys[2 * NUM_OF_ACTIONS];
+
+static void read_args(int argc, char** argv)
 {
     int i = 1;
     while (i < argc) {
@@ -62,6 +91,10 @@ void read_args(int argc, char** argv)
 
         if (!strcmp(argv[i], "sleep")) {
             sleep = SDL_TRUE;
+        }
+
+        if (!strcmp(argv[i], "filter")) {
+            filter = SDL_TRUE;
         }
 
         i++;
@@ -137,14 +170,10 @@ static void print_info()
     puts("The GNU General Public License V2 applies to this game.\n");
     puts("See: http://methane.sourceforge.net");
     puts("Instructions:\n");
-    puts("Press SPACE to start game (You can't enter player names).");
-    puts("Press CTRL to fire gas from the gun.");
-    puts("Press SPACE to jump.");
-    puts("Hold CTRL to suck a trapped baddie into the gun.");
-    puts("Release A to throw the trapped baddie from the gun.");
-    puts("Throw baddies at the wall to destroy them.\n");
-    puts("START = Quit (and save high scores)");
-    puts("SELECT = Change player graphic during game");
+    puts("Player 1 controls: cursor keys + right alt (or joystick)");
+    puts("Player 2 controls: SZXC keys + left control (or joystick)");
+    puts("ESC = Quit (and save high scores)");
+    puts("TAB = Change player graphic during game");
     //puts("F1 = Next Level (DISABLED)\n");
 }
 
@@ -152,8 +181,8 @@ static SDL_bool alloc_resources()
 {
     SDL_bool result = SDL_FALSE;
 
-    printf("Fullscreen %d, vsync %d, renderer name '%s'\n",
-        fullscreen, vsync, renderer_name);
+    printf("Fullscreen %d, vsync %d, renderer name '%s', filter %d\n",
+        fullscreen, vsync, renderer_name, filter);
 
     // ARGB(8888) surface
     SdlScreen = SDL_CreateRGBSurface(0, SCR_WIDTH, SCR_HEIGHT, 32,
@@ -178,6 +207,7 @@ static SDL_bool alloc_resources()
 
     SDL_SetHint(SDL_HINT_RENDER_DRIVER, renderer_name);
     SDL_SetHint(SDL_HINT_RENDER_VSYNC, vsync ? "1" : "0");
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, filter ? "best" : "nearest");
 
     SdlRenderer = SDL_CreateRenderer(SdlWindow, -1, SDL_RENDERER_ACCELERATED);
 
@@ -210,49 +240,119 @@ void free_resources()
     if (SdlScreen) SDL_FreeSurface(SdlScreen);
 }
 
+static void handle_joystick(int index)
+{
+    SDL_Joystick * joy;
+    KeyBinding * keyOffset;
+
+    if (index == 1) {
+        joy = joystick1;
+        keyOffset = &keys[0];
+    } else {
+        joy = joystick2;
+        keyOffset= &keys[NUM_OF_ACTIONS];
+    }
+
+    if (SDL_JoystickGetAttached(joy)) {
+        if (SDL_JoystickGetButton(joy, 0)) {
+            *keyOffset[EKeyFire].data = 1;
+        }
+
+        int xAxis = SDL_JoystickGetAxis(joy, 0);
+        int yAxis = SDL_JoystickGetAxis(joy, 1);
+
+        if (xAxis < 0) {
+            *keyOffset[EKeyLeft].data = 1;
+        } else if (xAxis > 0) {
+            *keyOffset[EKeyRight].data = 1;
+        }
+
+        if (yAxis < 0) {
+            *keyOffset[EKeyUp].data = 1;
+        } else if (yAxis > 0) {
+            *keyOffset[EKeyDown].data = 1;
+        }
+    }
+}
+
 static SDL_bool handle_input(void)
 {
     SDL_bool running = SDL_TRUE;
-
-    JOYSTICK *jptr1;
-    JOYSTICK *jptr2;
-
-    jptr1 = &Game.m_GameTarget.m_Joy1;
-    jptr2 = &Game.m_GameTarget.m_Joy2;
 
     SDL_PumpEvents();
     //SDL_JoystickUpdate();
 
     const Uint8 *state = SDL_GetKeyboardState(NULL);
 
-    if (state[SDL_SCANCODE_ESCAPE]) running = SDL_FALSE;
+    if (state[SDL_SCANCODE_ESCAPE]) {
+        running = SDL_FALSE;
+    }
 
-    if (state[SDL_SCANCODE_TAB])
-    {
+    if (state[SDL_SCANCODE_TAB]) {
     	Game.m_GameTarget.m_Game.TogglePuffBlow();
     }
 
-    jptr1->right = state[SDL_SCANCODE_RIGHT];
-    jptr1->left  = state[SDL_SCANCODE_LEFT];
-    jptr1->up    = state[SDL_SCANCODE_UP];
-    jptr1->down  = state[SDL_SCANCODE_DOWN];
-    jptr1->fire  = /*state[SDL_SCANCODE_LCTRL] ||*/ state[SDL_SCANCODE_RCTRL];
-    jptr1->key = 13; // Fake key press (required for high score table)
+    for (size_t i = 0; i < sizeof(keys) / sizeof(keys[0]); i++) {
+        *keys[i].data = state[keys[i].sc];
+    }
 
-    jptr2->right = state[SDL_SCANCODE_D];
-    jptr2->left  = state[SDL_SCANCODE_A];
-    jptr2->up    = state[SDL_SCANCODE_W];
-    jptr2->down  = state[SDL_SCANCODE_S];
-    jptr2->fire  = state[SDL_SCANCODE_LCTRL];
-    jptr2->key = 13; //??
+    *keys[10].data = *keys[11].data = 13; // TODO: allow proper text input
+
+    handle_joystick(1);
+    handle_joystick(2);
 
     SDL_Event e;
-    while (SDL_PollEvent(&e))
-    {
+    while (SDL_PollEvent(&e)) {
         if (e.type == SDL_QUIT) running = SDL_FALSE;
     }
 
     return running;
+}
+
+static void bind_keys()
+{
+    JOYSTICK *jptr1 = &Game.m_GameTarget.m_Joy1;
+    JOYSTICK *jptr2 = &Game.m_GameTarget.m_Joy2;
+
+    // Player 1
+    keys[0] = (KeyBinding){ SDL_SCANCODE_UP, &jptr1->up };
+    keys[1] = (KeyBinding){ SDL_SCANCODE_DOWN, &jptr1->down };
+    keys[2] = (KeyBinding){ SDL_SCANCODE_LEFT, &jptr1->left };
+    keys[3] = (KeyBinding){ SDL_SCANCODE_RIGHT, &jptr1->right };
+    keys[4] = (KeyBinding){ SDL_SCANCODE_RALT, &jptr1->fire };
+
+    // Player 2
+    keys[5] = (KeyBinding){ SDL_SCANCODE_S, &jptr2->up };
+    keys[6] = (KeyBinding){ SDL_SCANCODE_X, &jptr2->down };
+    keys[7] = (KeyBinding){ SDL_SCANCODE_Z, &jptr2->left };
+    keys[8] = (KeyBinding){ SDL_SCANCODE_C, &jptr2->right };
+    keys[9] = (KeyBinding){ SDL_SCANCODE_LSHIFT , &jptr2->fire };
+
+    keys[10] = (KeyBinding){ SDL_SCANCODE_UNKNOWN, &jptr1->key };
+    keys[11] = (KeyBinding){ SDL_SCANCODE_UNKNOWN, &jptr2->key };
+}
+
+static void maybe_sleep()
+{
+    if (sleep)
+    {
+        static Uint32 lastTicks = 0;
+
+        if (!lastTicks) {
+            lastTicks = SDL_GetTicks();
+        }
+
+        Uint32 now = SDL_GetTicks();
+        Uint32 diff = 20 - (now - lastTicks);
+
+        if (diff > 0 && diff <= 20)
+        {
+            //printf("sleeping %u\n", diff);
+            SDL_Delay(diff);
+        }
+
+        lastTicks = now;
+    }
 }
 
 //------------------------------------------------------------------------------
@@ -274,29 +374,17 @@ static void main_code(void)
     Game.LoadScores();
     Game.StartGame();
 
-    SDL_bool running = SDL_TRUE;
+    bind_keys();
 
-    Uint32 lastTicks = SDL_GetTicks();
+    SDL_bool running = SDL_TRUE;
 
     while (running)
     {
         running = handle_input();
 
-    	// (CHEAT MODE DISABLED) --> jptr1->next_level = 0;
     	Game.MainLoop(0);
 
-        if (sleep)
-        {
-            Uint32 now = SDL_GetTicks();
-            Uint32 diff = 20 - (now - lastTicks);
-
-            if (diff > 0 && diff <= 20)
-            {   printf("sleeping %u\n", diff);
-                SDL_Delay(diff);
-            }
-
-            lastTicks = now;
-        }
+        maybe_sleep();
     }
 
     Game.SaveScores();
