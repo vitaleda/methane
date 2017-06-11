@@ -43,7 +43,6 @@ static SDL_Renderer * SdlRenderer;
 static SDL_Texture * SdlTexture;
 
 static char TheScreen[SCR_WIDTH * SCR_HEIGHT];
-//static int SampleChannel = 5;	  // Used by CMethDoc::PlaySample
 
 static SDL_bool fullscreen = SDL_TRUE;
 static SDL_bool vsync = SDL_TRUE;
@@ -83,18 +82,14 @@ static void read_args(int argc, char** argv)
 
         if (!strcmp(argv[i], "nosync")) {
             vsync = SDL_FALSE;
-        }
-
-        if (!strcmp(argv[i], "window")) {
+        } else if (!strcmp(argv[i], "window")) {
             fullscreen = SDL_FALSE;
-        }
-
-        if (!strcmp(argv[i], "sleep")) {
+        } else if (!strcmp(argv[i], "sleep")) {
             sleep = SDL_TRUE;
-        }
-
-        if (!strcmp(argv[i], "filter")) {
+        } else if (!strcmp(argv[i], "filter")) {
             filter = SDL_TRUE;
+        } else {
+            fprintf(stderr, "Unknown argument '%s'\n", argv[i]);
         }
 
         i++;
@@ -232,7 +227,7 @@ out:
     return result;
 }
 
-void free_resources()
+static void free_resources()
 {
     if (SdlTexture) SDL_DestroyTexture(SdlTexture);
     if (SdlRenderer) SDL_DestroyRenderer(SdlRenderer);
@@ -280,7 +275,6 @@ static SDL_bool handle_input(void)
     SDL_bool running = SDL_TRUE;
 
     SDL_PumpEvents();
-    //SDL_JoystickUpdate();
 
     const Uint8 *state = SDL_GetKeyboardState(NULL);
 
@@ -334,6 +328,9 @@ static void bind_keys()
 
 static void maybe_sleep()
 {
+    static const Uint32 maxFps = 50;
+    static const Uint32 maxSleep = 1000 / maxFps;
+
     if (sleep)
     {
         static Uint32 lastTicks = 0;
@@ -343,12 +340,15 @@ static void maybe_sleep()
         }
 
         Uint32 now = SDL_GetTicks();
-        Uint32 diff = 20 - (now - lastTicks);
+        Uint32 diff = now - lastTicks;
 
-        if (diff > 0 && diff <= 20)
+        if (diff < maxSleep)
         {
-            //printf("sleeping %u\n", diff);
-            SDL_Delay(diff);
+            Uint32 sleepTime = maxSleep - diff;
+            //printf("sleeping %u\n", sleepTime);
+            if (sleepTime > 0) {
+                SDL_Delay(sleepTime);
+            }
         }
 
         lastTicks = now;
