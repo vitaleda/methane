@@ -253,19 +253,40 @@ static void handle_joystick(int index)
             *keyOffset[EKeyFire].data = 1;
         }
 
-        int xAxis = SDL_JoystickGetAxis(joy, 0);
-        int yAxis = SDL_JoystickGetAxis(joy, 1);
+        const Sint16 AXIS_THRESHOLD = 30000;
 
-        if (xAxis < 0) {
+        const Sint16 xAxis = SDL_JoystickGetAxis(joy, 0);
+        const Sint16 yAxis = SDL_JoystickGetAxis(joy, 1);
+
+        if (xAxis < -AXIS_THRESHOLD) {
             *keyOffset[EKeyLeft].data = 1;
-        } else if (xAxis > 0) {
+        } else if (xAxis > AXIS_THRESHOLD) {
             *keyOffset[EKeyRight].data = 1;
         }
 
-        if (yAxis < 0) {
+        if (yAxis < -AXIS_THRESHOLD) {
             *keyOffset[EKeyUp].data = 1;
-        } else if (yAxis > 0) {
+        } else if (yAxis > AXIS_THRESHOLD) {
             *keyOffset[EKeyDown].data = 1;
+        }
+
+        // D-pad
+        const Uint8 hat = SDL_JoystickGetHat(joy, 0);
+
+        if (hat & SDL_HAT_UP) {
+            *keyOffset[EKeyUp].data = 1;
+        }
+
+        if (hat & SDL_HAT_DOWN) {
+            *keyOffset[EKeyDown].data = 1;
+        }
+
+        if (hat & SDL_HAT_LEFT) {
+            *keyOffset[EKeyLeft].data = 1;
+        }
+
+        if (hat & SDL_HAT_RIGHT) {
+            *keyOffset[EKeyRight].data = 1;
         }
     }
 }
@@ -290,7 +311,7 @@ static SDL_bool handle_input(void)
         *keys[i].data = state[keys[i].sc];
     }
 
-    *keys[10].data = *keys[11].data = 13; // TODO: allow proper text input
+    *keys[5].data = *keys[11].data = 13; // TODO: allow proper text input
 
     handle_joystick(1);
     handle_joystick(2);
@@ -314,15 +335,14 @@ static void bind_keys()
     keys[2] = (KeyBinding){ SDL_SCANCODE_LEFT, &jptr1->left };
     keys[3] = (KeyBinding){ SDL_SCANCODE_RIGHT, &jptr1->right };
     keys[4] = (KeyBinding){ SDL_SCANCODE_RALT, &jptr1->fire };
+    keys[5] = (KeyBinding){ SDL_SCANCODE_UNKNOWN, &jptr1->key };
 
     // Player 2
-    keys[5] = (KeyBinding){ SDL_SCANCODE_S, &jptr2->up };
-    keys[6] = (KeyBinding){ SDL_SCANCODE_X, &jptr2->down };
-    keys[7] = (KeyBinding){ SDL_SCANCODE_Z, &jptr2->left };
-    keys[8] = (KeyBinding){ SDL_SCANCODE_C, &jptr2->right };
-    keys[9] = (KeyBinding){ SDL_SCANCODE_LSHIFT , &jptr2->fire };
-
-    keys[10] = (KeyBinding){ SDL_SCANCODE_UNKNOWN, &jptr1->key };
+    keys[6] = (KeyBinding){ SDL_SCANCODE_S, &jptr2->up };
+    keys[7] = (KeyBinding){ SDL_SCANCODE_X, &jptr2->down };
+    keys[8] = (KeyBinding){ SDL_SCANCODE_Z, &jptr2->left };
+    keys[9] = (KeyBinding){ SDL_SCANCODE_C, &jptr2->right };
+    keys[10] = (KeyBinding){ SDL_SCANCODE_LSHIFT , &jptr2->fire };
     keys[11] = (KeyBinding){ SDL_SCANCODE_UNKNOWN, &jptr2->key };
 }
 
