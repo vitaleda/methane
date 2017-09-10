@@ -210,7 +210,7 @@ PLAYER_GFX_FRAMES SMBGFX_Blow = {
 //------------------------------------------------------------------------------
 //! \brief Initialise the player object
 //------------------------------------------------------------------------------
-CPlayerObj::CPlayerObj()
+CPlayerObj::CPlayerObj() : m_StandPause(0)
 {
 	Reset();
 	SetPlayerName("");
