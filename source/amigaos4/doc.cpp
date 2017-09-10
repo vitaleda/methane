@@ -163,7 +163,7 @@ static void print_info()
     puts("See: http://methane.sourceforge.net");
     puts("Instructions:\n");
     puts("Player 1 controls: cursor keys + right alt (or joystick)");
-    puts("Player 2 controls: SZXC keys + left control (or joystick)");
+    puts("Player 2 controls: SZXC keys + left shift (or joystick)");
     puts("ESC = Quit (and save high scores)");
     puts("TAB = Change player graphic during game");
     //puts("F1 = Next Level (DISABLED)\n");
