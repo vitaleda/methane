@@ -114,31 +114,34 @@ void CGame::StartGame(void)
 //------------------------------------------------------------------------------
 //! \brief The Program Main Loop 
 //------------------------------------------------------------------------------
-void CGame::MainLoop(void)
+void CGame::MainLoop(bool update_logic)
 {
 	m_pSound->UpdateModule();
 
-	if (ControlFade())
-	{
-		switch (m_MainCommand)
-		{
-			case (MC_GAME):
-				GameLoop();
-				break;
-			case (MC_COMPLETED):
-				CompletedLoop();
-				break;
-			case (MC_TITLE):
-				TitleScreenLoop();
-				return;
-			case (MC_HIGHSCREEN):
-				HighScreenLoop();
-				return;
-			case (MC_GETPLAYER):
-				GetPlayerNameLoop();
-				return;
-		}
-	}
+    if (update_logic)
+    {
+    	if (ControlFade())
+    	{
+    		switch (m_MainCommand)
+    		{
+    			case (MC_GAME):
+    				GameLoop();
+    				break;
+    			case (MC_COMPLETED):
+    				CompletedLoop();
+    				break;
+    			case (MC_TITLE):
+    				TitleScreenLoop();
+    				return;
+    			case (MC_HIGHSCREEN):
+    				HighScreenLoop();
+    				return;
+    			case (MC_GETPLAYER):
+    				GetPlayerNameLoop();
+    				return;
+    		}
+    	}
+    }
 
 	m_pGameTarget->RedrawScreen();
 }

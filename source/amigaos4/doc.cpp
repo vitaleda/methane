@@ -46,7 +46,6 @@ static char TheScreen[SCR_WIDTH * SCR_HEIGHT];
 
 static SDL_bool fullscreen = SDL_TRUE;
 static SDL_bool vsync = SDL_TRUE;
-static SDL_bool sleep = SDL_FALSE;
 static SDL_bool filter = SDL_FALSE;
 
 static const char* renderer_name = "compositing";
@@ -84,8 +83,6 @@ static void read_args(int argc, char** argv)
             vsync = SDL_FALSE;
         } else if (!strcmp(argv[i], "window")) {
             fullscreen = SDL_FALSE;
-        } else if (!strcmp(argv[i], "sleep")) {
-            sleep = SDL_TRUE;
         } else if (!strcmp(argv[i], "filter")) {
             filter = SDL_TRUE;
         } else {
@@ -346,35 +343,6 @@ static void bind_keys()
     keys[11] = (KeyBinding){ SDL_SCANCODE_UNKNOWN, &jptr2->key };
 }
 
-static void maybe_sleep()
-{
-    static const Uint32 maxFps = 50;
-    static const Uint32 maxSleep = 1000 / maxFps;
-
-    if (sleep)
-    {
-        static Uint32 lastTicks = 0;
-
-        if (!lastTicks) {
-            lastTicks = SDL_GetTicks();
-        }
-
-        Uint32 now = SDL_GetTicks();
-        Uint32 diff = now - lastTicks;
-
-        if (diff < maxSleep)
-        {
-            Uint32 sleepTime = maxSleep - diff;
-            //printf("sleeping %u\n", sleepTime);
-            if (sleepTime > 0) {
-                SDL_Delay(sleepTime);
-            }
-        }
-
-        lastTicks = now;
-    }
-}
-
 //------------------------------------------------------------------------------
 //! \brief The program main code
 //------------------------------------------------------------------------------
@@ -398,13 +366,23 @@ static void main_code(void)
 
     SDL_bool running = SDL_TRUE;
 
+    Uint32 lastLogicUpdate = SDL_GetTicks();
+
+    const Uint32 logicUpdatesPerSecond = 30;
+    const Uint32 ticksToUpdate = 1000 / logicUpdatesPerSecond;
+
     while (running)
     {
+        const Uint32 now = SDL_GetTicks();
+        const bool updateLogic = ((now - lastLogicUpdate) >= ticksToUpdate);
+
+        if (updateLogic) {
+            lastLogicUpdate = now;
+        }
+
         running = handle_input();
 
-    	Game.MainLoop(0);
-
-        maybe_sleep();
+    	Game.MainLoop(updateLogic);
     }
 
     Game.SaveScores();
@@ -488,7 +466,7 @@ void CMethDoc::RedrawMainView( int pal_change_flag )
 //!
 //! 	\param screen_ptr = UNUSED
 //------------------------------------------------------------------------------
-void CMethDoc::DrawScreen( void *screen_ptr )
+void CMethDoc::DrawScreen()
 {
     //SDL_Color colors[PALETTE_SIZE];
     Uint32 colors[PALETTE_SIZE];
@@ -536,12 +514,11 @@ void CMethDoc::DrawScreen( void *screen_ptr )
 //------------------------------------------------------------------------------
 //! \brief The Game Main Loop
 //!
-//! 	\param screen_ptr = UNUSED
 //------------------------------------------------------------------------------
-void CMethDoc::MainLoop( void *screen_ptr )
+void CMethDoc::MainLoop( bool update_logic )
 {
-	m_GameTarget.MainLoop();
-	DrawScreen( screen_ptr );
+	m_GameTarget.MainLoop(update_logic);
+	DrawScreen();
 #ifdef METHANE_MIKMOD
 	m_pMikModDrv->Update();
 #endif

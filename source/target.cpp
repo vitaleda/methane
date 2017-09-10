@@ -85,9 +85,9 @@ void CGameTarget::StartGame(void)
 //------------------------------------------------------------------------------
 //! \brief Do the game main loop (Call every cycle)
 //------------------------------------------------------------------------------
-void CGameTarget::MainLoop(void)
+void CGameTarget::MainLoop(bool update_logic)
 {
-	m_Game.MainLoop();
+	m_Game.MainLoop(update_logic);
 }
 
 //------------------------------------------------------------------------------

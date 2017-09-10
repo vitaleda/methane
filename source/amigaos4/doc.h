@@ -29,7 +29,7 @@ public:
 
 	void InitGame(void);
 	void StartGame(void);
-	void MainLoop(void *screen_ptr);
+	void MainLoop(bool update_logic);
 	void RedrawMainView( int pal_change_flag );
 	void PlayModule(int id);
 	void StopModule(void);
@@ -41,7 +41,7 @@ public:
 	void LoadScores(void);
 
 private:
-	void DrawScreen( void *screen_ptr );
+	void DrawScreen();
 private:
 #ifdef METHANE_MIKMOD
 	CMikModDrv	*m_pMikModDrv;

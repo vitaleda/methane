@@ -72,7 +72,7 @@ public:
 	CGame();
 	void Init(CGameTarget *tptr, char *sptr, JOYSTICK *jptr1, JOYSTICK *jptr2);
 	void StartGame(void);
-	void MainLoop(void);
+	void MainLoop(bool update_logic = true);
 	void StartFRKObject(int type, int xpos, int ypos);
 	void MakeNumRise(int xpos, int ypos, int frame);
 	void LoadGoodieGfx( void );

@@ -31,7 +31,7 @@ public:
 	void InitGame(char *sptr);
 	void RedrawScreen(void);
 	void StartGame(void);
-	void MainLoop(void);
+	void MainLoop(bool update_logic);
 	void PrepareSoundDriver(void);
 	void PlayModule(int id);
 	void StopModule(void);
