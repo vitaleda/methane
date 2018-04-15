@@ -28,7 +28,7 @@
 
 #define NUM_STD_LEVELS	109
 
-extern char *level_text_names[NUM_STD_LEVELS];
+extern const char *level_text_names[NUM_STD_LEVELS];
 
 //------------------------------------------------------------------------------
 // Status Bar Offsets Structure
@@ -49,9 +49,9 @@ typedef struct _PLAYER_STATUS {
 
 typedef struct _PARTYOFFS
 {
-	int	frame;
-	int	xoffset;
-	int	yoffset;
+	int frame;
+	int xoffset;
+	unsigned int yoffset;
 } PARTYOFFS;
 
 typedef struct _ENDGROUP

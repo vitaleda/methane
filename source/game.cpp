@@ -1139,7 +1139,7 @@ void CGame::DrawPlayersInfo(void)
 //!
 //! 	\return the next charactor delay
 //------------------------------------------------------------------------------
-int CGame::CreateMessage(int yoffset, char *txt, int delay)
+int CGame::CreateMessage(int yoffset, const char *txt, int delay)
 {
 	char let;
 	int txtlen;
@@ -1574,7 +1574,7 @@ void CGame::CheckExtras(void)
 //! 	\param ypos = Y offset
 //!	\param text = Text to draw
 //------------------------------------------------------------------------------
-void CGame::DrawFont(int ypos, char *text)
+void CGame::DrawFont(int ypos, const char *text)
 {
 	int	len;
 	int	xoffset;
@@ -1602,7 +1602,7 @@ void CGame::DrawFont(int ypos, char *text)
 //!	\param text = Text to draw
 //!	\param xpos = X offset. If 0 = Centre text
 //------------------------------------------------------------------------------
-void CGame::DrawScrFont(int ypos, char *text, int xpos)
+void CGame::DrawScrFont(int ypos, const char *text, int xpos)
 {
 	int	len;
 	int	xoffset;
@@ -2066,7 +2066,7 @@ void CGame::DrawEndCredits(void)
 					let = let - ' ';
 					if ( (let>0) && (let<NUM_FONT_TABLE) )
 					{
-						m_Sprites.Draw( font_table[let], xpos, ypos, GFX_NOWRAP );
+						m_Sprites.Draw( font_table[(int)let], xpos, ypos, GFX_NOWRAP );
 					}
 				}
 				xpos+=16;
@@ -2294,7 +2294,7 @@ void CGame::DrawHighTable(void)
 	hs = m_HiScores;
 	for (cnt=1; cnt<=MAX_HISCORES; cnt++, hs++)
 	{
-		sprintf( text, "%d %#8d %c%c%c%c", cnt, hs->score,
+		sprintf( text, "%d %d %c%c%c%c", cnt, hs->score,
 			hs->name[0],hs->name[1],hs->name[2],hs->name[3] );
 		DrawFont( 18*(cnt+4), text );
 	}
