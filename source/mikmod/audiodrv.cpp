@@ -150,6 +150,16 @@ void CMikModDrv::InitDriver(void)
 		MikMod_RegisterDriver(&drv_ahi);
 	}
 	MikMod_RegisterDriver(&drv_nos);
+#elif defined __vita__
+	if (drv_vita.Name)
+	{
+		if (drv_vita.CommandLine)
+		{
+			drv_vita.CommandLine("buffer=14");
+		}
+		MikMod_RegisterDriver(&drv_vita);
+	}
+	MikMod_RegisterDriver(&drv_nos);
 #else		// Must be Linux
 	if (drv_oss.Name)	// Valid OSS driver
 	{
