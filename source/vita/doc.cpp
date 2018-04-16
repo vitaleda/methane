@@ -270,7 +270,14 @@ static SDL_bool handle_input(void)
 
 	SDL_Event e;
 	while (SDL_PollEvent(&e)) {
-		if (e.type == SDL_QUIT) running = SDL_FALSE;
+		switch (e.type) {
+			case SDL_JOYBUTTONDOWN:
+			case SDL_JOYBUTTONUP:
+				if (e.jbutton.button == 10 && e.jbutton.state == SDL_PRESSED) { // Select
+					fullscreen = (SDL_bool)(fullscreen ^ 1);
+				}
+				break;
+		}
 	}
 
 	return running;
@@ -459,24 +466,21 @@ void CMethDoc::DrawScreen()
 		SDL_UnlockSurface (SdlScreen);
 	}
 
+	SDL_RenderClear(SdlRenderer);
 	SDL_UpdateTexture(SdlTexture, NULL, SdlScreen->pixels, SdlScreen->pitch);
-	if (fullscreen) {
-		SDL_RenderCopy(SdlRenderer, SdlTexture, NULL, NULL);
-	} else {
-		SDL_Rect src;
-		src.x = 0;
-		src.y = 0;
-		src.w = SdlScreen->w;
-		src.h = SdlScreen->h;
+	SDL_Rect src;
+	src.x = 0;
+	src.y = 0;
+	src.w = SdlScreen->w;
+	src.h = SdlScreen->h;
 
-		SDL_Rect dst;
-		dst.h = 544;
-		dst.w = (float)src.w * ((float)dst.h / (float)src.h);
-		dst.y = 0;
-		dst.x = (960 - dst.w) / 2;
+	SDL_Rect dst;
+	dst.h = 544;
+	dst.w = fullscreen ? 960 : (float)src.w * ((float)dst.h / (float)src.h);
+	dst.y = 0;
+	dst.x = (960 - dst.w) / 2;
 
-		SDL_RenderCopy(SdlRenderer, SdlTexture, &src, &dst);
-	}
+	SDL_RenderCopy(SdlRenderer, SdlTexture, &src, &dst);
 	SDL_RenderPresent(SdlRenderer);
 }
 
