@@ -19,6 +19,7 @@ TODO:
 
 */
 
+#include <kbdvita.h>
 #include <psp2/kernel/clib.h>
 #include <psp2/io/stat.h>
 #include <stdlib.h>
@@ -46,7 +47,7 @@ static char TheScreen[SCR_WIDTH * SCR_HEIGHT];
 
 static SDL_bool fullscreen = SDL_TRUE;
 
-static char HighScoreFileName[] = "ux0:/data/smb/Methane.HiScores";
+static char HighScoreFileName[] = "ux0:data/smb/Methane.HiScores";
 #define HighScoreLoadBufferSize (MAX_HISCORES * 64)
 
 static SDL_Joystick * joystick1;
@@ -64,6 +65,8 @@ enum EKey {
 	EKeyRight,
 	EKeyFire
 };
+
+static char *currentName = NULL;
 
 #define NUM_OF_ACTIONS 6
 
@@ -263,8 +266,6 @@ static SDL_bool handle_input(void)
 		*keys[i].data = state[keys[i].sc];
 	}
 
-	*keys[5].data = *keys[11].data = 13; // TODO: allow proper text input
-
 	handle_joystick(1);
 	handle_joystick(2);
 
@@ -338,6 +339,11 @@ static void main_code(void)
 
 		if (updateLogic) {
 			lastLogicUpdate = now;
+		}
+
+		if (Game.m_GameTarget.m_Game.m_InsertionDone) {
+			Game.m_GameTarget.m_Game.m_InsertionDone = 0;
+			Game.SaveScores();
 		}
 
 		running = handle_input();
@@ -607,3 +613,22 @@ void CMethDoc::SaveScores(void)
 	fclose(fptr);
 }
 
+//------------------------------------------------------------------------------
+//! \brief Edit the player high score name
+//------------------------------------------------------------------------------
+void CMethDoc::EditName(JOYSTICK *pjoy, char **nptr)
+{
+	if (currentName == NULL) {
+		char *res = kbdvita_get("ENTER NAME", "", 4);
+		if (res != NULL) {
+			for (char* c = res; (*c = toupper(*c)); ++c);
+			strncpy(*nptr, res, 4);
+			currentName = strdup(res);
+			*keys[5].data = *keys[11].data = 13;
+		}
+	} else{
+		strncpy(*nptr, currentName, 4);
+		*keys[5].data = *keys[11].data = 13;
+	}
+	Game.m_GameTarget.m_Game.EditName(pjoy, *nptr);
+}

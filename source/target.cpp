@@ -139,3 +139,13 @@ void CGameTarget::UpdateModule(int id)
 
 }
 
+//------------------------------------------------------------------------------
+//! \brief Edit the player high score name
+//!
+//!	\param pjoy = The joystick (eg m_pjoy)
+//!	\param nptr = The player name
+//------------------------------------------------------------------------------
+void CGameTarget::EditName(JOYSTICK *pjoy, char **nptr)
+{
+	m_pDoc->EditName(pjoy, nptr);
+}

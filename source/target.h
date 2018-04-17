@@ -37,6 +37,7 @@ public:
 	void StopModule(void);
 	void PlaySample(int id, int pos, int rate);
 	void UpdateModule(int id);
+	void EditName(JOYSTICK *pjoy, char **nptr);
 
 	CGame m_Game;		// The Main Game
 	JOYSTICK m_Joy1;	// To be written to by the OS

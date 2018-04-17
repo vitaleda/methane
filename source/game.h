@@ -94,6 +94,7 @@ public:
 	void InitHighScreen(void);
 	HISCORES *InsertHiScore(int score, char *name);
 	void TogglePuffBlow(void);
+	void EditName(JOYSTICK *pjoy, char *nptr);
 
 private:
 	int FadePalette( int offset, int size, METHANE_RGB *srcpal, int speed );
@@ -135,7 +136,6 @@ private:
 	void RedrawScrIfNeeded(void);
 	void InitGetPlayerNameScreen(int player_two_flag);
 	void GetPlayerNameLoop(void);
-	void EditName(JOYSTICK *pjoy, char *nptr);
 	void PrepareEditName(void);
 	void CheckForGameOver( void );
 
@@ -186,6 +186,7 @@ public:
 	int	m_CarCnt;
 
 	int	m_GameOverFlag;
+	int	m_InsertionDone;
 	HISCORES m_HiScores[MAX_HISCORES];
 private:
 	int	m_PUP_Cnt;

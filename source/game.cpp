@@ -2169,6 +2169,7 @@ void CGame::DoGameOverLoop(void)
 			pobj = (CPlayerObj *) pobj->m_pNext;
 		}
 		InitHighScreen();
+		m_InsertionDone = 1;
 	}
 }
 
@@ -2181,6 +2182,7 @@ void CGame::InitNewGame(void)
 
 	m_LevelNumber = 1;
 	m_GameOverFlag = 0;
+	m_InsertionDone = 0;
 	m_TrainCnt = m_DuckCnt = m_CarCnt = 0;
 	m_LevelSkip = 0;
 	m_EggFlag = 0;
@@ -2604,7 +2606,7 @@ void CGame::GetPlayerNameLoop(void)
 
 	RedrawScrIfNeeded();
 
-	EditName(m_pJoy1, nptr);	// Easier to edit name using player 1
+	m_pGameTarget->EditName(m_pJoy1, &nptr);	// Easier to edit name using player 1
 }
 
 //------------------------------------------------------------------------------
@@ -2648,6 +2650,14 @@ void CGame::EditName(JOYSTICK *pjoy, char *nptr)
 
 		if ( (key==10) || (key==13) )	// Finished editing?
 		{
+			if (m_EditPlayerOneNameFlag)
+			{
+				strncpy(m_PlayerNameBuff1, nptr, 4);
+			}else
+			{
+				strncpy(m_PlayerNameBuff2, nptr, 4);
+			}
+
 			m_MainCounter = HISCREEN_SHOW_DELAY;
 			pjoy->fire = 0;
 

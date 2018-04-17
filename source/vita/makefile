@@ -2,10 +2,10 @@ TARGET = Methane
 TITLE_ID = METHANE01
 
 CXX = arm-vita-eabi-g++
-CXXFLAGS = -Wl,-q -O3 -Wall -fsigned-char -I$(VITASDK)/arm-vita-eabi/include/SDL2 -I../ -DMETHANE_OLD_CPP_NEW
-LIBS = -lSDL2 -lvita2d -lmikmod \
-	-lSceAudio_stub -lSceCtrl_stub -lSceDisplay_stub -lSceGxm_stub \
-	-lSceHid_stub -lSceSysmodule_stub -lSceTouch_stub
+CXXFLAGS = -Wl,-q -O3 -Wall -fsigned-char -I$(VITASDK)/arm-vita-eabi/include/SDL2 -I.. -DMETHANE_OLD_CPP_NEW
+LIBS = -lSDL2 -lvita2d -lvitaGL -lmikmod -lkbdvita \
+	-lSceAppUtil_stub -lSceAudio_stub -lSceCtrl_stub -lSceCommonDialog_stub \
+	-lSceDisplay_stub -lSceGxm_stub -lSceHid_stub -lSceSysmodule_stub -lSceTouch_stub
 
 # Remove the following two lines to disable sound
 METHANE_SND_FLAGS = -DMETHANE_MIKMOD
@@ -58,7 +58,7 @@ distclean: clean
 MainSource/%.o : ../%.cpp
 	@echo "  Compiling $<..."
 	@if [ ! -d MainSource ]; then mkdir -p MainSource; fi
-	$(CXX) $(CXXFLAGS) $(METHANE_FLAGS) $(METHANE_SND_FLAGS) -I ../linux -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(METHANE_FLAGS) $(METHANE_SND_FLAGS) -I ../vita -c $< -o $@
 
 # The main data
 MainData/%.o : ../data/%.cpp

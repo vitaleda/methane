@@ -39,6 +39,7 @@ public:
 	void UpdateModule(int id);
 	void SaveScores(void);
 	void LoadScores(void);
+	void EditName(JOYSTICK *pjoy, char **nptr);
 
 private:
 	void DrawScreen();
